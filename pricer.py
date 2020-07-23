@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -7,6 +6,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, \
     ElementClickInterceptedException
+
+import re
 import time
 
 STRAWBERRY_11LB_SELECTOR = "div[data-variation-container = 'athenaProductVariations']"
@@ -18,8 +19,6 @@ wait = WebDriverWait(driver, 2)
 driver.maximize_window()
 driver.get('https://us.myprotein.com/')
 
-# soup = BeautifulSoup(driver.page_source, 'html.parser')
-
 
 def main():
     search_for_protein()
@@ -29,7 +28,7 @@ def main():
         try:
             select_strawberry_11lb()
 
-            # check that product is 11 pound strawberry cream
+            # Check that product is 11 pound strawberry cream
             strawberry_11 = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, STRAWBERRY_11LB_SELECTOR)))
             if strawberry_11.get_attribute('data-information-url') != STRAWBERRY_11LB_VALUE:
                 continue
@@ -45,45 +44,71 @@ def main():
             close.click()
             continue
 
-    # sale = soup.find(class_='countDownTimer_link').text
-    # print(sale)
+    find_and_apply_discount()
 
 
 def search_for_protein():
-    # find the search bar
+    # Find the search bar
     search = wait.until(EC.presence_of_element_located((By.NAME, 'search')))
 
-    # search for impact whey protein
+    # Search for impact whey protein
     search.send_keys('impact whey protein')
     search.send_keys(Keys.RETURN)
 
 
 def select_strawberry_11lb():
-    # find the flavor and select it
+    # Find the flavor and select it
     flavor = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'athenaProductVariations_dropdown')))
     Select(flavor).select_by_visible_text('Strawberry Cream')
 
-    # select the 11 lb bag
+    # Select the 11 lb bag
     element = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), '11 lb')]")))
     element.click()
-    time.sleep(2)  # wait 2 seconds to allow page to catch up
+    time.sleep(2)  # Wait 2 seconds to allow page to catch up
 
 
 def add_and_go_to_cart(not_working):
-    # add to cart
+    # Add to cart
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'productAddToBasket')))
     driver.find_element_by_class_name('productAddToBasket').click()
-    time.sleep(2)  # wait 2 seconds to allow page to catch up
+    time.sleep(2)  # Wait 2 seconds to allow page to catch up
 
     product = driver.find_element_by_class_name('athenaAddedToBasketModal_itemName')
     if "11lb" in product.text and "Strawberry Cream" in product.text:
         not_working = False
 
-        # go to cart
+        # Go to cart
         wait.until(EC.presence_of_element_located((By.LINK_TEXT, 'Checkout')))
         driver.find_element_by_link_text('Checkout').click()
 
     return not_working
+
+
+def find_and_apply_discount():
+    global original_price, sale_text, code, sale_price
+
+    price_element = driver.find_element_by_xpath('//*[@id="10852509"]/div[4]')
+    original_price = price_element.text
+    original_price = float(original_price.replace('$', ''))
+    print(original_price)
+
+    # Entire sale banner text
+    sale_element = driver.find_element_by_xpath('//*[@id="checkout"]/div[1]/a/p')
+    sale_text = sale_element.text
+
+    # Get just the code
+    code = re.search(r'CODE:.*$', sale_text).group()
+    code = code.split(': ')[1]
+    print(code)
+
+    code_box = wait.until(EC.presence_of_element_located((By.NAME, 'discountCode')))
+    code_box.send_keys(code)
+    code_box.send_keys(Keys.RETURN)
+
+    sale_price_element = driver.find_element_by_xpath('//*[@id="10852509"]/div[4]')
+    sale_price = sale_price_element.text
+    sale_price = float(sale_price.replace('$', ''))
+    print(sale_price)
 
 
 if __name__ == "__main__":
