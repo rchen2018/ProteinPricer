@@ -7,6 +7,8 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, \
     ElementClickInterceptedException
 
+from db_connect import add_scan
+
 import re
 import time
 
@@ -45,6 +47,7 @@ def main():
             continue
 
     find_and_apply_discount()
+    add_scan('Strawberry Cream', sale_price, sale_text)
 
 
 def search_for_protein():
@@ -90,7 +93,6 @@ def find_and_apply_discount():
     price_element = driver.find_element_by_xpath('//*[@id="10852509"]/div[4]')
     original_price = price_element.text
     original_price = float(original_price.replace('$', ''))
-    print(original_price)
 
     # Entire sale banner text
     sale_element = driver.find_element_by_xpath('//*[@id="checkout"]/div[1]/a/p')
@@ -99,17 +101,17 @@ def find_and_apply_discount():
     # Get just the code
     code = re.search(r'CODE:.*$', sale_text).group()
     code = code.split(': ')[1]
-    print(code)
 
     code_box = wait.until(EC.presence_of_element_located((By.NAME, 'discountCode')))
     code_box.send_keys(code)
     code_box.send_keys(Keys.RETURN)
+    time.sleep(1)
 
     sale_price_element = driver.find_element_by_xpath('//*[@id="10852509"]/div[4]')
     sale_price = sale_price_element.text
     sale_price = float(sale_price.replace('$', ''))
-    print(sale_price)
 
 
 if __name__ == "__main__":
     main()
+    print('done')
