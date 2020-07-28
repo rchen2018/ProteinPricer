@@ -99,7 +99,7 @@ def find_and_apply_discount():
     sale_text = sale_element.text
 
     # Get just the code
-    code = re.search(r'CODE:.*$', sale_text).group()
+    code = re.search(r'CODE:[^|]*', sale_text).group()
     code = code.split(': ')[1]
 
     code_box = wait.until(EC.presence_of_element_located((By.NAME, 'discountCode')))
@@ -114,4 +114,3 @@ def find_and_apply_discount():
 
 if __name__ == "__main__":
     main()
-    print('done')
