@@ -1,23 +1,22 @@
 import sqlite3
 import datetime
-from operator import itemgetter
+
+database_path = r'C:\Users\rchen\PycharmProjects\ProteinPricer\protein.db'
 
 
 def add_scan(flavor, sale_price, sale_text):
-    conn = sqlite3.connect('protein.db')
+    conn = sqlite3.connect(database_path)
     c = conn.cursor()
 
     today = datetime.date.today()
-    params = (flavor, sale_price, today, sale_text)
 
     c.execute("SELECT * FROM scans "
               "WHERE flavor = ? "
               "AND sale_price = ? "
-              "AND date = ? "
-              "AND sale_text = ?", params)
+              "AND sale_text = ?", (flavor, sale_price, sale_text))
 
     if len(c.fetchall()) == 0:
-        c.execute("INSERT INTO scans VALUES (?,?,?,?)", params)
+        c.execute("INSERT INTO scans VALUES (?,?,?,?)", (flavor, sale_price, today, sale_text))
 
     conn.commit()
     conn.close()
@@ -26,7 +25,7 @@ def add_scan(flavor, sale_price, sale_text):
 
 
 def analyze_scan(flavor, sale_price):
-    conn = sqlite3.connect('protein.db')
+    conn = sqlite3.connect(database_path)
     c = conn.cursor()
 
     c.execute("SELECT ROWID, flavor, sale_price, date FROM scans "

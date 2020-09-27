@@ -95,7 +95,7 @@ def find_and_apply_discount():
     original_price = float(original_price.replace('$', ''))
 
     # Entire sale banner text
-    sale_element = driver.find_element_by_xpath('//*[@id="checkout"]/div[1]/a/p')
+    sale_element = driver.find_element_by_xpath('//*[@id="checkout"]/div[2]/a/p')
     sale_text = sale_element.text
 
     # Get just the code
